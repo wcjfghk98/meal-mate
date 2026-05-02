@@ -175,6 +175,7 @@ const form = document.querySelector("#profileForm");
 const mealList = document.querySelector("#mealList");
 const weekPlan = document.querySelector("#weekPlan");
 const shoppingList = document.querySelector("#shoppingList");
+const exportShopping = document.querySelector("#exportShopping");
 const switchStageField = document.querySelector("#switchStageField");
 const switchGuide = document.querySelector("#switchGuide");
 const preferenceSummary = document.querySelector("#preferenceSummary");
@@ -456,6 +457,13 @@ function renderWeek() {
 }
 
 function renderShopping() {
+  const items = getShoppingItems();
+  shoppingList.innerHTML = items
+    .map(([item, count]) => `<li><strong>${item}</strong><span>${count}회분</span></li>`)
+    .join("");
+}
+
+function getShoppingItems() {
   const basket = new Map();
   currentPlan.flatMap((day) => day.meals).forEach((meal) => {
     Object.entries(meal.shop).forEach(([item, count]) => {
@@ -463,10 +471,24 @@ function renderShopping() {
     });
   });
 
-  shoppingList.innerHTML = [...basket.entries()]
-    .sort(([a], [b]) => a.localeCompare(b, "ko"))
-    .map(([item, count]) => `<li><strong>${item}</strong><span>${count}회분</span></li>`)
-    .join("");
+  return [...basket.entries()].sort(([a], [b]) => a.localeCompare(b, "ko"));
+}
+
+function exportShoppingCsv() {
+  const rows = [["품목", "필요량"], ...getShoppingItems().map(([item, count]) => [item, `${count}회분`])];
+  const csv = rows
+    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+    .join("\r\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `meal-mate-shopping-${date}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function renderAll() {
@@ -505,6 +527,8 @@ document.querySelector("#shuffleDay").addEventListener("click", () => {
   currentPlan[0].meals = buildDay(Math.floor(Math.random() * 1000));
   renderAll();
 });
+
+exportShopping.addEventListener("click", exportShoppingCsv);
 
 mealList.addEventListener("click", (event) => {
   const button = event.target.closest(".swap");
