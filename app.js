@@ -176,11 +176,38 @@ const mealList = document.querySelector("#mealList");
 const weekPlan = document.querySelector("#weekPlan");
 const shoppingList = document.querySelector("#shoppingList");
 const exportShopping = document.querySelector("#exportShopping");
+const exportMemo = document.querySelector("#exportMemo");
 const switchStageField = document.querySelector("#switchStageField");
 const switchGuide = document.querySelector("#switchGuide");
 const preferenceSummary = document.querySelector("#preferenceSummary");
 const dislikeStatus = document.querySelector("#dislikeStatus");
 const goalFieldset = document.querySelector("#goalFieldset");
+let weeklyFocus = [];
+
+const focusIngredients = {
+  chicken: ["닭가슴살", "닭 안심", "닭다리살", "닭고기"],
+  egg: ["달걀"],
+  tofu: ["두부"],
+  fish: ["연어", "참치", "새우", "대구살", "흰살생선", "고등어"],
+  beef: ["우둔살", "소고기"],
+  pork: ["돼지 안심", "돼지 수육"],
+  sweetPotato: ["고구마"],
+  rice: ["현미밥", "잡곡밥", "현미잡곡밥", "밥"]
+};
+
+const shoppingUnitRules = [
+  { pattern: /닭가슴살|닭 안심|닭다리살|돼지 안심|돼지 수육|우둔살|연어|대구살|흰살생선|고등어/, amount: 120, unit: "g" },
+  { pattern: /달걀/, amount: 1, unit: "개" },
+  { pattern: /두부/, amount: 0.5, unit: "모" },
+  { pattern: /현미밥|잡곡밥|현미잡곡밥|통밀빵|메밀면/, amount: 1, unit: "팩" },
+  { pattern: /고구마|사과|바나나|아보카도|오이|양파|파프리카|당근/, amount: 1, unit: "개" },
+  { pattern: /상추|양상추|믹스채소|쌈채소|루꼴라|청경채|시금치|브로콜리|버섯|양배추|나물 믹스|해초|쌈채소/, amount: 1, unit: "봉" },
+  { pattern: /방울토마토|블루베리/, amount: 1, unit: "팩" },
+  { pattern: /김치|묵은지|무생채|토마토소스|간장|김가루|후무스|쌈장|폰즈|발사믹/, amount: 1, unit: "소량" },
+  { pattern: /단백질 파우더|프로틴 파우더|식물성 단백질 파우더|무가당 저탄수 단백질 파우더|무가당 식물성 단백질 파우더/, amount: 1, unit: "회분" },
+  { pattern: /무가당 두유/, amount: 1, unit: "팩" },
+  { pattern: /오트밀|아몬드|호두|견과류|병아리콩|옥수수|커피/, amount: 1, unit: "소량" }
+];
 
 function makeMeal(name, kcal, protein, carbs, fat, tags, avoid, favorites, items, shop) {
   return { name, kcal, protein, carbs, fat, tags, avoid, favorites, items, shop };
@@ -298,7 +325,12 @@ function scoreMeal(meal, goals, favorites) {
     (score, favorite) => score + (meal.favorites.includes(favorite) ? 5 : 0),
     0
   );
-  return goalScore + favoriteScore;
+  const focusScore = weeklyFocus.reduce((score, focus) => {
+    if (meal.favorites.includes(focus)) return score + 3;
+    const focusItems = focusIngredients[focus] || [];
+    return score + (meal.items.some((item) => focusItems.some((focusItem) => item.includes(focusItem))) ? 2 : 0);
+  }, 0);
+  return goalScore + favoriteScore + focusScore;
 }
 
 function chooseMeal(type, offset = 0, dayOverride = null) {
@@ -331,6 +363,7 @@ function buildDay(offset = 0, dayOverride = null) {
 
 function buildWeek() {
   const { program, switchDay } = getPreferences();
+  weeklyFocus = getWeeklyFocus();
   if (program === "switchOn") {
     currentPlan = Array.from({ length: 7 }, (_, index) => {
       const dayNumber = Math.min(switchDay + index, 28);
@@ -346,6 +379,17 @@ function buildWeek() {
     day: `${day}요일`,
     meals: buildDay(index * 41)
   }));
+}
+
+function getWeeklyFocus() {
+  const { program, favorites } = getPreferences();
+  if (program === "switchOn") {
+    const base = favorites.filter((item) => ["chicken", "egg", "tofu", "fish", "pork", "rice"].includes(item));
+    return (base.length ? base : ["chicken", "tofu", "egg"]).slice(0, 3);
+  }
+
+  const base = favorites.filter((item) => focusIngredients[item]);
+  return (base.length ? base : ["chicken", "egg", "tofu", "rice"]).slice(0, 4);
 }
 
 function totals(dayMeals) {
@@ -399,8 +443,11 @@ function renderPreferenceSummary() {
   const dislikeText = dislikes.length
     ? ` 제외 재료: ${dislikes.join(", ")}.`
     : " 제외 재료는 없습니다.";
+  const focusText = weeklyFocus.length
+    ? ` 이번 주 장보기는 ${weeklyFocus.map((item) => favoriteLabels[item] || item).join(", ")} 중심으로 묶습니다.`
+    : "";
 
-  preferenceSummary.textContent = `${goalText}.${favoriteText}${dislikeText}`;
+  preferenceSummary.textContent = `${goalText}.${favoriteText}${focusText}${dislikeText}`;
   dislikeStatus.textContent = dislikes.length
     ? `${dislikes.join(", ")}가 들어간 메뉴는 추천에서 제외됩니다.`
     : "직접 입력한 재료도 메뉴 재료명과 맞으면 제외됩니다.";
@@ -459,7 +506,7 @@ function renderWeek() {
 function renderShopping() {
   const items = getShoppingItems();
   shoppingList.innerHTML = items
-    .map(([item, count]) => `<li><strong>${item}</strong><span>${count}회분</span></li>`)
+    .map(({ item, amountText, countText }) => `<li><strong>${item}</strong><span>${amountText} · ${countText}</span></li>`)
     .join("");
 }
 
@@ -471,11 +518,35 @@ function getShoppingItems() {
     });
   });
 
-  return [...basket.entries()].sort(([a], [b]) => a.localeCompare(b, "ko"));
+  return [...basket.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, "ko"))
+    .map(([item, count]) => ({
+      item,
+      count,
+      countText: `${count}회분`,
+      amountText: estimateShoppingAmount(item, count)
+    }));
+}
+
+function estimateShoppingAmount(item, count) {
+  const rule = shoppingUnitRules.find((candidate) => candidate.pattern.test(item));
+  if (!rule) return "필요량 확인";
+  if (rule.unit === "소량") return count > 1 ? "소량 준비" : "소량";
+
+  const total = rule.amount * count;
+  if (rule.unit === "g") {
+    return total >= 1000 ? `약 ${(total / 1000).toFixed(total % 1000 === 0 ? 0 : 1)}kg` : `약 ${total}g`;
+  }
+
+  if (rule.unit === "모") {
+    return total % 1 === 0 ? `약 ${total}모` : `약 ${total.toFixed(1)}모`;
+  }
+
+  return `약 ${Math.ceil(total)}${rule.unit}`;
 }
 
 function exportShoppingCsv() {
-  const rows = [["품목", "필요량"], ...getShoppingItems().map(([item, count]) => [item, `${count}회분`])];
+  const rows = [["품목", "구매량", "계산 기준"], ...getShoppingItems().map(({ item, amountText, countText }) => [item, amountText, countText])];
   const csv = rows
     .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
     .join("\r\n");
@@ -485,6 +556,40 @@ function exportShoppingCsv() {
   const date = new Date().toISOString().slice(0, 10);
   link.href = url;
   link.download = `meal-mate-shopping-${date}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportShoppingMemo() {
+  const { program, switchDay } = getPreferences();
+  const title = program === "switchOn" ? `Meal Mate 장보기 메모 - 스위치온 DAY ${switchDay}` : "Meal Mate 장보기 메모";
+  const shoppingLines = getShoppingItems().map(({ item, amountText, countText }) => `- ${item}: ${amountText} (${countText})`);
+  const planLines = currentPlan.flatMap((day) => [
+    "",
+    `[${day.day}]`,
+    ...day.meals.map((meal) => `- ${mealLabels[meal.type]}: ${meal.name}`)
+  ]);
+  const focusText = weeklyFocus.length
+    ? `이번 주 장보기 집중 재료: ${weeklyFocus.map((item) => favoriteLabels[item] || item).join(", ")}`
+    : "이번 주 장보기 집중 재료: 자동 구성";
+  const text = [
+    title,
+    focusText,
+    "",
+    "[장보기]",
+    ...shoppingLines,
+    "",
+    "[식단표]",
+    ...planLines
+  ].join("\r\n");
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `meal-mate-shopping-memo-${date}.txt`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -529,6 +634,7 @@ document.querySelector("#shuffleDay").addEventListener("click", () => {
 });
 
 exportShopping.addEventListener("click", exportShoppingCsv);
+exportMemo.addEventListener("click", exportShoppingMemo);
 
 mealList.addEventListener("click", (event) => {
   const button = event.target.closest(".swap");

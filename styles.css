@@ -609,6 +609,13 @@ select {
   gap: 12px;
 }
 
+.shopping-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .shopping-actions h2 {
   font-size: 20px;
 }
@@ -623,11 +630,14 @@ select {
 }
 
 .shopping-list li {
-  min-height: 48px;
+  min-height: 58px;
   padding: 0 14px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.9);
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .shopping-list span {
@@ -698,6 +708,19 @@ select {
   .toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .shopping-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .shopping-buttons {
+    justify-content: stretch;
+  }
+
+  .shopping-buttons button {
+    flex: 1;
   }
 
   .tabs {
