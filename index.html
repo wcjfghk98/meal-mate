@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="취향, 제외 재료, 스위치온 다이어트 단계에 맞춰 하루 식단과 일주일 장보기 목록을 만드는 식단 플래너입니다."
+    />
+    <meta property="og:title" content="Meal Mate - 다이어트 식단 플래너" />
+    <meta
+      property="og:description"
+      content="일반 감량식과 스위치온 다이어트 식단을 취향에 맞춰 구성해보세요."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#22765f" />
+    <title>Meal Mate - 다이어트 식단 플래너</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <div>
+          <span class="eyebrow">DIET PLANNER</span>
+          <h1>내 취향에 맞춰<br />가볍게 이어가는 식단</h1>
+          <p>
+            목표와 선호 음식을 고르면 조건에 맞는 하루 식단과 일주일 장보기 목록을 바로 구성해줍니다.
+          </p>
+        </div>
+        <div class="hero-plate" aria-hidden="true">
+          <span class="plate-ring"></span>
+          <span class="food food-green"></span>
+          <span class="food food-orange"></span>
+          <span class="food food-cream"></span>
+        </div>
+      </section>
+
+      <section class="planner">
+        <aside class="panel controls" aria-label="식단 조건">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">Profile</span>
+              <h2>내 조건</h2>
+            </div>
+            <span class="status-dot"></span>
+          </div>
+
+          <form id="profileForm" class="form-grid">
+            <label class="field">
+              <span>성별</span>
+              <select id="gender">
+                <option value="female">여성</option>
+                <option value="male">남성</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>나이</span>
+              <input id="age" type="number" min="15" max="90" value="30" />
+            </label>
+
+            <label class="field">
+              <span>키(cm)</span>
+              <input id="height" type="number" min="130" max="220" value="165" />
+            </label>
+
+            <label class="field">
+              <span>몸무게(kg)</span>
+              <input id="weight" type="number" min="35" max="180" value="65" />
+            </label>
+
+            <label class="field wide">
+              <span>활동량</span>
+              <select id="activity">
+                <option value="1.2">거의 앉아서 생활</option>
+                <option value="1.375" selected>가벼운 운동 주 1-3회</option>
+                <option value="1.55">운동 주 3-5회</option>
+                <option value="1.725">강도 높은 운동</option>
+              </select>
+            </label>
+
+            <label class="field wide">
+              <span>감량 속도</span>
+              <select id="pace">
+                <option value="250">천천히</option>
+                <option value="450" selected>적당히</option>
+                <option value="650">빠르게</option>
+              </select>
+            </label>
+
+            <fieldset>
+              <legend>식단 방식</legend>
+              <div class="choice-grid mode-grid">
+                <label><input type="radio" name="program" value="general" checked /><span>일반 감량식</span></label>
+                <label><input type="radio" name="program" value="switchOn" /><span>스위치온</span></label>
+              </div>
+            </fieldset>
+
+            <label class="field wide stage-field" id="switchStageField">
+              <span>스위치온 DAY</span>
+              <select id="switchDay">
+                <option value="1">DAY 1</option>
+              </select>
+            </label>
+
+            <fieldset id="goalFieldset">
+              <legend>식단 목표</legend>
+              <div class="choice-grid compact">
+                <label><input type="checkbox" name="goal" value="balanced" checked /><span>균형식</span></label>
+                <label><input type="checkbox" name="goal" value="highProtein" /><span>고단백</span></label>
+                <label><input type="checkbox" name="goal" value="lowCarb" /><span>저탄수</span></label>
+                <label><input type="checkbox" name="goal" value="quick" /><span>간편식</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>선호 음식</legend>
+              <div class="choice-grid food-grid">
+                <label><input type="checkbox" name="favorite" value="chicken" /><span>닭고기</span></label>
+                <label><input type="checkbox" name="favorite" value="egg" /><span>달걀</span></label>
+                <label><input type="checkbox" name="favorite" value="tofu" /><span>두부</span></label>
+                <label><input type="checkbox" name="favorite" value="fish" /><span>생선</span></label>
+                <label><input type="checkbox" name="favorite" value="beef" /><span>소고기</span></label>
+                <label><input type="checkbox" name="favorite" value="pork" /><span>돼지고기</span></label>
+                <label><input type="checkbox" name="favorite" value="sweetPotato" /><span>고구마</span></label>
+                <label><input type="checkbox" name="favorite" value="rice" /><span>밥</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>피하고 싶은 것</legend>
+              <div class="choice-grid compact avoid-grid">
+                <label><input type="checkbox" name="avoid" value="pork" /><span>돼지고기</span></label>
+                <label><input type="checkbox" name="avoid" value="beef" /><span>소고기</span></label>
+                <label><input type="checkbox" name="avoid" value="seafood" /><span>해산물</span></label>
+                <label><input type="checkbox" name="avoid" value="dairy" /><span>유제품</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>싫어하는 채소/재료</legend>
+              <div class="choice-grid food-grid">
+                <label><input type="checkbox" name="dislike" value="오이" checked /><span>오이</span></label>
+                <label><input type="checkbox" name="dislike" value="양파" /><span>양파</span></label>
+                <label><input type="checkbox" name="dislike" value="버섯" /><span>버섯</span></label>
+                <label><input type="checkbox" name="dislike" value="브로콜리" /><span>브로콜리</span></label>
+                <label><input type="checkbox" name="dislike" value="토마토" /><span>토마토</span></label>
+                <label><input type="checkbox" name="dislike" value="양배추" /><span>양배추</span></label>
+                <label><input type="checkbox" name="dislike" value="파프리카" /><span>파프리카</span></label>
+                <label><input type="checkbox" name="dislike" value="시금치" /><span>시금치</span></label>
+              </div>
+              <label class="field dislike-input">
+                <span>직접 추가</span>
+                <input id="customDislikes" type="text" placeholder="예: 가지, 샐러리, 당근" />
+              </label>
+              <p id="dislikeStatus" class="field-note">오이가 제외 재료로 반영 중입니다.</p>
+            </fieldset>
+
+            <button type="submit" class="primary">식단 새로 만들기</button>
+          </form>
+        </aside>
+
+        <section class="workspace">
+          <div class="summary-grid">
+            <article class="metric calorie-card">
+              <span id="targetMetricLabel">권장 섭취</span>
+              <strong id="targetCalories">0 kcal</strong>
+            </article>
+            <article class="metric">
+              <span>단백질 목표</span>
+              <strong id="targetProtein">0 g</strong>
+            </article>
+            <article class="metric">
+              <span>오늘 구성</span>
+              <strong id="prepLevel">보통</strong>
+            </article>
+          </div>
+
+          <article id="switchGuide" class="switch-guide">
+            <div>
+              <span class="section-kicker">Switch-on rule</span>
+              <h2 id="switchGuideTitle">DAY 1 도입기</h2>
+            </div>
+            <div class="guide-grid">
+              <span><b id="shakeRule">쉐이크 4회</b>쉐이크</span>
+              <span><b id="mealRule">허용식만</b>식사</span>
+              <span><b id="carbRule">하루 10g 안팎</b>탄수</span>
+              <span><b id="fastingRule">단식 없음</b>단식</span>
+            </div>
+          </article>
+
+          <article class="preference-summary">
+            <div>
+              <span class="section-kicker">Recommendation</span>
+              <h2>추천 기준</h2>
+            </div>
+            <p id="preferenceSummary">균형식 기준으로 식단을 구성하고 있습니다.</p>
+          </article>
+
+          <div class="toolbar">
+            <div class="tabs" role="tablist" aria-label="보기 선택">
+              <button class="tab is-active" data-view="today" type="button">오늘</button>
+              <button class="tab" data-view="week" type="button">일주일</button>
+              <button class="tab" data-view="shopping" type="button">장보기</button>
+            </div>
+            <button id="shuffleDay" class="ghost" type="button">오늘만 바꾸기</button>
+          </div>
+
+          <section id="todayView" class="view is-visible" aria-label="오늘 식단">
+            <div id="mealList" class="meal-list"></div>
+          </section>
+
+          <section id="weekView" class="view" aria-label="일주일 식단">
+            <div id="weekPlan" class="week-grid"></div>
+          </section>
+
+          <section id="shoppingView" class="view" aria-label="장보기 목록">
+            <div class="shopping-layout">
+              <ul id="shoppingList" class="shopping-list"></ul>
+              <div class="note">
+                <span class="section-kicker">Prep tip</span>
+                <h2>덜 지치게 준비하기</h2>
+                <p>단백질 2종, 탄수화물 1종, 채소 3종만 먼저 정해두면 평일 식단은 대부분 조립식으로 해결돼요.</p>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

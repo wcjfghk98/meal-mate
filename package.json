@@ -1,0 +1,11 @@
+{
+  "name": "meal-mate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Diet meal planner with general and Switch-on diet modes.",
+  "scripts": {
+    "start": "npx serve .",
+    "check": "node --check app.js"
+  },
+  "devDependencies": {}
+}
